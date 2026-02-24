@@ -96,7 +96,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/
@@ -137,4 +136,4 @@ Thumbs.db
 workspace/
 *.log
 logs/
-nanobot/storage/
+nanobot/storage/.env

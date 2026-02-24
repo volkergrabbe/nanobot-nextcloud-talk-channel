@@ -7,7 +7,6 @@ import hashlib
 import hmac
 import json
 import os
-from pathlib import Path
 from typing import Any
 
 import httpx
@@ -28,7 +27,7 @@ class NextcloudTalkChannel(BaseChannel):
         super().__init__(config, bus)
         self.config: NextcloudTalkConfig = config
         self._http: httpx.AsyncClient | None = None
-        self._webhook_task: asyncio.Task | None = None
+        self._runner = None
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -45,6 +44,7 @@ class NextcloudTalkChannel(BaseChannel):
 
         self._running = True
         self._http = httpx.AsyncClient(timeout=30.0)
+        self._webhook_port = getattr(self.config, "webhook_port", 18790)
 
         try:
             from aiohttp import web
@@ -54,13 +54,12 @@ class NextcloudTalkChannel(BaseChannel):
             runner = web.AppRunner(app)
             await runner.setup()
 
-            port = getattr(self.config, "webhook_port", 18790)
-            site = web.TCPSite(runner, "0.0.0.0", port)
+            site = web.TCPSite(runner, "0.0.0.0", self._webhook_port)
             await site.start()
             self._runner = runner
             logger.info(
                 "Nextcloud Talk channel started – listening on port {} path {}",
-                port,
+                self._webhook_port,
                 self.config.webhook_path,
             )
             while self._running:
@@ -71,8 +70,6 @@ class NextcloudTalkChannel(BaseChannel):
             )
         except Exception as e:
             logger.error("Nextcloud Talk: webhook server error: {}", e)
-        finally:
-            await self.stop()
 
     async def stop(self) -> None:
         """Stop the Nextcloud Talk channel."""
@@ -80,7 +77,7 @@ class NextcloudTalkChannel(BaseChannel):
         if self._http:
             await self._http.aclose()
             self._http = None
-        if hasattr(self, "_runner") and self._runner:
+        if self._runner:
             try:
                 await self._runner.cleanup()
             except Exception as e:
