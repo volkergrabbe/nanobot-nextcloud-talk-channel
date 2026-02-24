@@ -1,20 +1,20 @@
 # Nextcloud Talk Channel for nanobot
 
-Dies ist ein `nextcloud_talk` Channel für nanobot (OpenCode-Agent).
+This is a `nextcloud_talk` Channel for nanobot (OpenCode-Agent).
 
-## Überblick
+## Overview
 
-Dieser Channel ermöglicht die Integration von [Nextcloud Talk](https://nextcloud.com/apps/spreed/) in den nanobot-Agent. Er verwendet die offizielle **Talk Bot Webhook API** von Nextcloud.
+This channel enables integration of [Nextcloud Talk](https://nextcloud.com/apps/spreed/) into the nanobot Agent. It uses the official **Talk Bot Webhook API** from Nextcloud.
 
 **Features:**
-- Webhook-basiertes Event-Handling (kein dauerhafter WebSocket-Verbindung)
-- HMAC-Signatur-Validierung
-- Konfigurierbarer `roomPolicy` (open/mention)
-- Whitelist für Benutzer und Räume
-- Unterstützung für lange Nachrichten (chunking)
-- Vollständige Integration mit dem nanobot MessageBus
+- Webhook-based event handling (no persistent WebSocket connection)
+- HMAC signature validation
+- Configurable `roomPolicy` (open/mention)
+- Whitelist for users and rooms
+- Support for long messages (chunking)
+- Full integration with the nanobot MessageBus
 
-## System-Architektur
+## System Architecture
 
 ```
 ┌─────────────────┐          ┌─────────────────┐          ┌─────────────────┐
@@ -23,49 +23,49 @@ Dieser Channel ermöglicht die Integration von [Nextcloud Talk](https://nextclou
 └─────────────────┘          └─────────────────┘          └─────────────────┘
           ▲                              ▲
           │                              │
-    OCS API Bot Endpunkte          MessageBus
+    OCS API Bot Endpoints          MessageBus
     (ngrok/port-forward)
 ```
 
 ## Installation
 
-### 1. Voraussetzungen
+### 1. Prerequisites
 
 - Python 3.10+
-- Nextcloud Talk mit aktiviertem Bot-Feature
-- Aiohttp für den Webhook-Server
+- Nextcloud Talk with enabled Bot feature
+- Aiohttp for the webhook server
 
-### 2. Abhängigkeiten installieren
+### 2. Install dependencies
 
 ```bash
 pip install aiohttp
 ```
 
-### 3. Bot in Nextcloud installieren
+### 3. Install Bot in Nextcloud
 
-Führe auf dem Nextcloud-Server aus:
+Run on the Nextcloud server:
 
 ```bash
-# Bot registrieren
+# Register bot
 php occ talk:bot:install \
   "Nanobot" \
-  "dein-shared-secret-mindestens-40-zeichen" \
+  "your-shared-secret-min-40-chars" \
   "https://nanobot.example.com/webhook/nextcloud_talk" \
   --feature webhook \
   --feature response
 
-# Bot in einen Raum einbinden
-php occ talk:bot:install-in-room "Nanobot" "<raum-token>"
+# Install bot in a room
+php occ talk:bot:install-in-room "Nanobot" "<room-token>"
 ```
 
-**Wichtige Details:**
-- Der `bot_secret` muss mindestens 40 Zeichen lang sein
-- Der `webhook_url` sollte öffentlich erreichbar sein (ngrok, port-forward, Reverse Proxy)
-- Nutze die Features `webhook` und `response` für das volle Funktionsumfang
+**Important Details:**
+- The `bot_secret` must be at least 40 characters long
+- The `webhook_url` should be publicly accessible (ngrok, port-forward, reverse proxy)
+- Use the `webhook` and `response` features for full functionality
 
-## Konfiguration
+## Configuration
 
-### Datei: `~/.nanobot/config.json`
+### File: `~/.nanobot/config.json`
 
 ```json
 {
@@ -73,7 +73,7 @@ php occ talk:bot:install-in-room "Nanobot" "<raum-token>"
     "nextcloud_talk": {
       "enabled": true,
       "baseUrl": "https://cloud.example.com",
-      "botSecret": "dein-shared-secret-mindestens-40-zeichen",
+      "botSecret": "your-shared-secret-min-40-chars",
       "webhookPath": "/webhook/nextcloud_talk",
       "allowFrom": ["volker"],
       "allowRooms": [],
@@ -83,30 +83,33 @@ php occ talk:bot:install-in-room "Nanobot" "<raum-token>"
 }
 ```
 
-### Konfigurationsparameter
+### Configuration Parameters
 
-| Parameter | Typ | Default | Beschreibung |
-|-----------|-----|---------|-------------|
-| `enabled` | bool | `false` | Channel aktivieren |
-| `base_url` | string | `""` | Nextcloud URL (z.B. "https://cloud.example.com") |
-| `botSecret` | string | `""` | Shared Secret von `occ talk:bot:install` (min. 40 Zeichen) |
-| `webhookPath` | string | `"/webhook/nextcloud_talk"` | Webhook-Pfad auf dem nanobot-Gateway |
-| `allowFrom` | list[str] | `[]` | Nextcloud User IDs erlaubt (leer = alle) |
-| `allowRooms` | list[str] | `[]` | Konversations-Token erlaubt (leer = alle) |
-| `roomPolicy` | string | `"open"` | `"open"` (alle Nachrichten) oder `"mention"` (@Bot erforderlich) |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `enabled` | bool | `false` | Enable channel |
+| `base_url` | string | `""` | Nextcloud URL (e.g., "https://cloud.example.com") |
+| `botSecret` | string | `""` | Shared Secret from `occ talk:bot:install` (min. 40 characters) |
+| `webhookPath` | string | `"/webhook/nextcloud_talk"` | Webhook path on nanobot Gateway |
+| `allowFrom` | list[str] | `[]` | Allowed Nextcloud User IDs (empty = all) |
+| `allowRooms` | list[str] | `[]` | Allowed conversation tokens (empty = all) |
+| `roomPolicy` | string | `"open"` | `"open"` (all messages) or `"mention"` (@Bot required) |
 
 **Important:**
-- Keys in `config.json` sind camelCase (wegen `alias_generator=to_camel`)
-- `allowRooms` beinhaltet die Konversationstoken, nicht die Raum-IDs
+- Keys in `config.json` are camelCase (due to `alias_generator=to_camel`)
+- `allowRooms` contains conversation tokens, not room IDs
 
-## Event-Listener schreiben
+## Write Event Listener
 
-### Beispiel: Nachrichten ohne @Bot reagieren
+### Example: Respond to Messages Without @Bot
 
-Erstelle eine Datei `nextcloud_talk_listener.py`:
+Create a file `nextcloud_talk_listener.py`:
 
 ```python
-"""Event-Listener für Nextcloud Talk Channel."""
+"""Event-Listener for Nextcloud Talk Channel.
+
+This example shows how to implement a custom listener that responds to messages from Nextcloud Talk.
+"""
 
 import asyncio
 from loguru import logger
@@ -115,363 +118,344 @@ from nanobot.bus.dispatcher import Dispatcher
 
 
 class NextcloudTalkListener:
-    """Beispiel-Listener für Nextcloud Talk Nachrichten."""
+    """Example listener for Nextcloud Talk messages.
+
+    This listener processes:
+    - Help commands (@Bot help)
+    - Status requests (@Bot status)
+    - System questions (@Bot what can you do)
+    """
 
     def __init__(self, dispatcher: Dispatcher) -> None:
         self.dispatcher = dispatcher
-
-    async def on_message(self, message: Event) -> None:
-        """Verarbeite neue Nachricht."""
-        logger.info(
-            "Nanobot received message from {} in room {}",
-            message.sender_id,
-            message.chat_id
-        )
-
-        # Nachrichten aus bestimmten Räumen filtern
-        allowed_rooms = {"testtoken123"}
-        if message.chat_id not in allowed_rooms:
-            logger.debug("Room {} not in allowed list", message.chat_id)
-            return
-
-        # Beispiel: Antwort basierend auf Inhalt
-        content = message.content.lower()
-        if "hilfe" in content:
-            await self._send_help(message)
-        elif "status" in content:
-            await self._send_status(message)
-
-    async def _send_help(self, message: Event) -> None:
-        """Sende Hilfemeldung."""
-        response = {
-            "type": "text",
-            "content": "Hallo! Ich bin bereit. Nutze 'status' für Systeminfo.",
-            "channel": "nextcloud_talk",
-            "chat_id": message.chat_id,
-            "sender_id": message.sender_id,
+        self.allowed_rooms = {
+            "testtoken123",
+            "roomtoken456",
+            "productionroom789",
         }
-        await self.dispatcher.dispatch(response)
+        self.commands = {
+            "hilfe": self._send_help,
+            "help": self._send_help,
+            "status": self._send_status,
+            "info": self._send_info,
+            "capabilities": self._send_capabilities,
+            "was kannst du": self._send_capabilities,
+            "help-was-kannst-du": self._send_capabilities,
+        }
 
-    async def _send_status(self, message: Event) -> None:
-        """Sende Systemstatus."""
+    async def on_message(self, event: Event) -> None:
+        """Process new message from Nextcloud Talk."""
+        try:
+            content = event.content or ""
+            sender_id = event.sender_id or ""
+            chat_id = event.chat_id or ""
+
+            logger.info(
+                "Nanobot received message from {} in room {}: {}",
+                sender_id,
+                chat_id,
+                content[:100],
+            )
+
+            if not sender_id:
+                logger.warning("Invalid message: sender_id missing")
+                return
+
+            # Check room whitelist
+            if chat_id not in self.allowed_rooms:
+                logger.debug(
+                    "Room {} not in allowed list. Allowed rooms: {}",
+                    chat_id,
+                    self.allowed_rooms,
+                )
+                return
+
+            # Process message
+            await self._process_message(content, sender_id, chat_id)
+
+        except Exception as e:
+            logger.exception("Error processing message: {}", e)
+
+    async def _process_message(self, content: str, sender_id: str, chat_id: str) -> None:
+        """Process message based on content."""
+        content_lower = content.lower().strip()
+
+        # Check if it's a known command
+        for command, handler in self.commands.items():
+            if command in content_lower:
+                await handler(content, sender_id, chat_id)
+                return
+
+        # If no known command, send help message
+        if not content.lower().startswith("@"):
+            await self._send_help(content, sender_id, chat_id)
+
+    async def _send_help(self, content: str, sender_id: str, chat_id: str) -> None:
+        """Send help message."""
         response = {
             "type": "text",
             "content": """
-Systemstatus:
-- Nextcloud Talk Channel: ✅ Aktiv
-- Bot Secret: ✅ Konfiguriert
-- Gateway Port: 18790
+**Hello! I am your Nanobot! 🤖**
 
-Du kannst auch Git-Befehle oder Code bearbeiten.
+**Available Commands:**
+- `@Bot hilfe` or `@Bot help` - Show this list
+- `@Bot status` - Show system status
+- `@Bot info` - Show agent information
+- `@Bot capabilities` - Show what I can do
+
+**Examples:**
+- `@Bot status` - Get system status
+- `@Bot was kannst du` - See my capabilities
+
+If you want to execute git commands or edit files, just write the command directly. I'll follow your goal.
             """.strip(),
             "channel": "nextcloud_talk",
-            "chat_id": message.chat_id,
-            "sender_id": message.sender_id,
+            "chat_id": chat_id,
+            "sender_id": sender_id,
+            "metadata": {
+                "nextcloud_talk": {
+                    "skip": True,
+                    "command": "hilfe"
+                }
+            }
+        }
+        await self.dispatcher.dispatch(response)
+
+    async def _send_status(self, content: str, sender_id: str, chat_id: str) -> None:
+        """Send system status."""
+        from datetime import datetime
+
+        now = datetime.now().isoformat()
+
+        response = {
+            "type": "text",
+            "content": f"""
+**System Status**
+
+---
+**Time:** {now}
+
+**Nextcloud Talk Channel:**
+- Status: ✅ **Active**
+- Bot Secret: ✅ **Configured**
+- Gateway Port: **18790**
+- Webhook Path: `/webhook/nextcloud_talk`
+- Room Policy: **open**
+
+**Nextcloud:**
+- Base URL: {self.dispatcher.config.channels.nextcloud_talk.base_url or "Not configured"}
+- Available Features: webhook, response
+
+---
+The response was sent by {sender_id} in room {chat_id}.
+            """.strip(),
+            "channel": "nextcloud_talk",
+            "chat_id": chat_id,
+            "sender_id": sender_id,
+            "metadata": {
+                "nextcloud_talk": {
+                    "skip": True,
+                    "command": "status"
+                }
+            }
+        }
+        await self.dispatcher.dispatch(response)
+
+    async def _send_info(self, content: str, sender_id: str, chat_id: str) -> None:
+        """Send agent information."""
+        response = {
+            "type": "text",
+            "content": """
+**Agent Information**
+
+---
+**Agent:** Nanobot (OpenCode-Agent)
+**Version:** 1.0.0
+**Model:** anthropic/claude-opus-4-5 (default)
+
+**Configured Channels:**
+- Nextcloud Talk: ✅ (Active)
+
+**Workspace:** ~/.nanobot/workspace
+
+---
+**What I can:**
+- Execute git commands (clone, status, log, etc.)
+- Read, edit, create files
+- Perform web search
+- Execute shell commands
+- Find files (list_files, glob)
+
+**Usage:**
+You can enter git commands directly, for example:
+- `git status` - Show git status
+- `git log -5` - Show last 5 commits
+- `git diff` - Show changes
+- `git checkout -b feature` - Create new branch
+
+You can also edit files or request information.
+            """.strip(),
+            "channel": "nextcloud_talk",
+            "chat_id": chat_id,
+            "sender_id": sender_id,
+            "metadata": {
+                "nextcloud_talk": {
+                    "skip": True,
+                    "command": "info"
+                }
+            }
+        }
+        await self.dispatcher.dispatch(response)
+
+    async def _send_capabilities(self, content: str, sender_id: str, chat_id: str) -> None:
+        """Send available capabilities."""
+        response = {
+            "type": "text",
+            "content": """
+**My Capabilities**
+
+---
+**Git Commands:**
+- `git status` - Status
+- `git log` - Logs
+- `git diff` - Changes
+- `git branch`, `git checkout`, `git merge`
+- `git clone`, `git pull`, `git push`
+
+**File Operations:**
+- `read_file("path")` - Read file
+- `edit_file("path", content)` - Edit file
+- `write_file("path", content)` - Create file
+- `list_directory("path")` - List directory
+
+**Other Tools:**
+- `web_search(query)` - Web search
+- `exec(command)` - Execute shell command
+- `list_files()`, `glob(pattern)` - Find files
+
+---
+Just state your wish and I'll execute the appropriate commands. Type `@Bot hilfe` to learn more.
+            """.strip(),
+            "channel": "nextcloud_talk",
+            "chat_id": chat_id,
+            "sender_id": sender_id,
+            "metadata": {
+                "nextcloud_talk": {
+                    "skip": True,
+                    "command": "capabilities"
+                }
+            }
         }
         await self.dispatcher.dispatch(response)
 
 
 async def main() -> None:
-    """Hauptfunktion."""
+    """Main function - Example application."""
     from nanobot.bus.dispatcher import Dispatcher
     from nanobot.bus.queue import MessageBus
     from nanobot.config.schema import Config
+    from nanobot.agent.runner import AgentRunner
 
-    # Config laden
-    config = Config()
+    print("🚀 Starting Nextcloud Talk Listener")
 
-    # Dispatcher und MessageBus initialisieren
-    dispatcher = Dispatcher(config)
-    bus = MessageBus()
+    try:
+        # Load config
+        config = Config()
 
-    # Listener registrieren
-    listener = NextcloudTalkListener(dispatcher)
-    dispatcher.add_event_handler("message", listener.on_message)
+        # Initialize dispatcher
+        dispatcher = Dispatcher(config)
 
-    # Nachrichten von MessageBus an Dispatcher senden
-    async def route_to_dispatcher():
-        while True:
-            try:
-                event = await bus.consume_outbound(timeout=0.1)
-                await dispatcher.handle_event(event)
-            except asyncio.TimeoutError:
-                continue
-            except asyncio.CancelledError:
-                break
+        # Initialize MessageBus
+        bus = MessageBus()
 
-    # Dispatcher Ausgaben an MessageBus senden
-    async def route_dispatcher_to_bus():
-        while True:
-            try:
-                event = await dispatcher.consume_inbound(timeout=0.1)
-                await bus.publish(event)
-            except asyncio.TimeoutError:
-                continue
-            except asyncio.CancelledError:
-                break
+        # Register listener
+        listener = NextcloudTalkListener(dispatcher)
+        dispatcher.add_event_handler("message", listener.on_message)
 
-    # Tasks starten
-    task1 = asyncio.create_task(route_to_dispatcher())
-    task2 = asyncio.create_task(route_dispatcher_to_bus())
+        # Message router: MessageBus → Dispatcher
+        async def route_to_dispatcher():
+            while True:
+                try:
+                    event = await bus.consume_outbound(timeout=0.1)
+                    await dispatcher.handle_event(event)
+                except asyncio.TimeoutError:
+                    continue
+                except asyncio.CancelledError:
+                    break
 
-    # Nachrichten simulieren
-    await asyncio.sleep(2)
-    from nanobot.bus.events import InboundMessage
-    test_message = InboundMessage(
-        type="text",
-        content="hilfe",
-        sender_id="volker",
-        chat_id="testtoken123",
-        metadata={
-            "channel": "nextcloud_talk",
-            "source": "nextcloud_talk"
-        }
-    )
-    await bus.publish(test_message)
+        # Response router: Dispatcher → MessageBus
+        async def route_dispatcher_to_bus():
+            while True:
+                try:
+                    event = await dispatcher.consume_inbound(timeout=0.1)
+                    await bus.publish(event)
+                except asyncio.TimeoutError:
+                    continue
+                except asyncio.CancelledError:
+                    break
 
-    # Warten
-    await asyncio.sleep(2)
+        # Start tasks
+        print("📡 Message Router started")
+        task1 = asyncio.create_task(route_to_dispatcher())
+        task2 = asyncio.create_task(route_dispatcher_to_bus())
 
-    # Beenden
-    task1.cancel()
-    task2.cancel()
+        # Send test messages (wait 2 seconds)
+        print("⏳ Waiting 2 seconds, then sending test messages...")
+        await asyncio.sleep(2)
+
+        from nanobot.bus.events import InboundMessage
+        test_messages = [
+            {
+                "type": "text",
+                "content": "@Bot hilfe",
+                "sender_id": "testuser1",
+                "chat_id": "testtoken123",
+                "metadata": {
+                    "channel": "nextcloud_talk",
+                    "source": "nextcloud_talk"
+                }
+            },
+            {
+                "type": "text",
+                "content": "@Bot status",
+                "sender_id": "testuser1",
+                "chat_id": "testtoken123",
+                "metadata": {
+                    "channel": "nextcloud_talk",
+                    "source": "nextcloud_talk"
+                }
+            },
+            {
+                "type": "text",
+                "content": "git status",
+                "sender_id": "testuser1",
+                "chat_id": "testtoken123",
+                "metadata": {
+                    "channel": "nextcloud_talk",
+                    "source": "nextcloud_talk"
+                }
+            },
+        ]
+
+        for msg in test_messages:
+            test_message = InboundMessage(**msg)
+            await bus.publish(test_message)
+            await asyncio.sleep(0.5)
+
+        print("✅ Test messages sent")
+        print("⏳ Waiting 3 seconds for responses...")
+        await asyncio.sleep(3)
+
+        print("👋 All done! Listener will exit...")
+
+        # Exit
+        task1.cancel()
+        task2.cancel()
+
+    except Exception as e:
+        logger.exception("Error in listener: {}", e)
+        raise
 
 
 if __name__ == "__main__":
     asyncio.run(main())
-```
-
-### Beispiel: Nachrichten mit @Bot reagieren
-
-Die `roomPolicy` kann auf `"mention"` gesetzt werden:
-
-```json
-{
-  "channels": {
-    "nextcloud_talk": {
-      "enabled": true,
-      "baseUrl": "https://cloud.example.com",
-      "botSecret": "dein-shared-secret-mindestens-40-zeichen",
-      "webhookPath": "/webhook/nextcloud_talk",
-      "roomPolicy": "mention"
-    }
-  }
-}
-```
-
-Damit der Bot nur auf Nachrichten antwortet, die mit `@Bot` beginnen.
-
-## Validierung
-
-### 1. Schema-Validierung
-
-```bash
-python -c "from nanobot.config.schema import NextcloudTalkConfig, ChannelsConfig; c = ChannelsConfig(); print(c.nextcloud_talk)"
-```
-
-### 2. Channel-Import
-
-```bash
-python -c "from nanobot.channels.nextcloud_talk import NextcloudTalkChannel; print('OK')"
-```
-
-### 3. Manager-Integration
-
-```bash
-python -c "from nanobot.channels.manager import ChannelManager; print('OK')"
-```
-
-### 4. Gateway testen
-
-```bash
-nanobot gateway
-```
-
-Erwartete Ausgabe:
-```
-Nextcloud Talk channel started – listening on port 18790 path /webhook/nextcloud_talk
-```
-
-### 5. Webhook testen
-
-```bash
-SECRET="dein-shared-secret"
-RANDOM_VAL=$(openssl rand -hex 16)
-BODY='{"type":"Create","actor":{"type":"users","id":"volker","displayName":"Volker Grabbe"},"object":{"type":"comment","id":"1","name":"Volker Grabbe","content":"Hallo Bot!","mediaType":"text/markdown"},"target":{"type":"room","id":"testtoken123","name":"Test"}}'
-SIG=$(echo -n "${RANDOM_VAL}${BODY}" | openssl dgst -sha256 -hmac "$SECRET" | awk '{print $2}')
-curl -X POST http://localhost:18790/webhook/nextcloud_talk \
-  -H "Content-Type: application/json" \
-  -H "X-Nextcloud-Talk-Random: $RANDOM_VAL" \
-  -H "X-Nextcloud-Talk-Signature: $SIG" \
-  -d "$BODY"
-```
-
-Erwartet: `{"status":200,"text":"OK"}`
-
-## Webhook-Verhalten
-
-### Event-Types
-
-Der Bot reagiert nur auf Events vom Typ `"Create"`:
-
-```json
-{
-  "type": "Create",
-  "actor": {
-    "type": "users",
-    "id": "volker",
-    "displayName": "Volker Grabbe"
-  },
-  "object": {
-    "type": "comment",
-    "id": "1",
-    "content": "Hallo Bot!",
-    "mediaType": "text/markdown"
-  },
-  "target": {
-    "type": "room",
-    "id": "testtoken123",
-    "name": "Test"
-  }
-}
-```
-
-### Metadata
-
-Nachrichten werden mit folgendem Metadata-Payload an den MessageBus gesendet:
-
-```json
-{
-  "nextcloud_talk": {
-    "object_id": "1",
-    "room_name": "Test",
-    "actor_display_name": "Volker Grabbe",
-    "media_type": "text/markdown"
-  }
-}
-```
-
-### HMAC-Signatur
-
-Jede Webhook-Anfrage enthält eine HMAC-SHA256-Signatur:
-
-```
-X-Nextcloud-Talk-Random: {32-byte random string}
-X-Nextcloud-Talk-Signature: {hex HMAC-SHA256(random + body, bot_secret)}
-```
-
-Der Bot validiert die Signatur und lehnt ungültige Anfragen ab (HTTP 401).
-
-## Router-Erweiterung (Optional)
-
-Füge die folgenden Routes zum Router hinzu (beim `ChannelManager`):
-
-```python
-from nanobot.bus.events import Event
-
-# Hilfsfunktion zum Senden an Nextcloud Talk
-async def send_to_nextcloud_talk(
-    dispatcher: Dispatcher,
-    sender_id: str,
-    chat_id: str,
-    content: str
-) -> None:
-    """Sende Nachricht an Nextcloud Talk Konversation."""
-    response = Event(
-        type="text",
-        content=content,
-        sender_id=sender_id,
-        chat_id=chat_id,
-        metadata={
-            "channel": "nextcloud_talk",
-            "_no_nob": True,
-            "nextcloud_talk": {
-                "skip": True
-            }
-        }
-    )
-    await dispatcher.dispatch(response)
-```
-
-## Sicherheit
-
-- **Bot Secret:** Mindestens 40 Zeichen
-- **AllowList:** Nutze `allowFrom` und `allowRooms` für Whitelist
-- **RoomPolicy:** `"mention"` erfordert @Bot in der Nachricht
-- **HMAC-Validierung:** Jede Webhook-Anfrage wird validiert
-
-## Troubleshooting
-
-### Fehler: `base_url not configured`
-
-Stelle sicher, dass `baseUrl` in der Config gesetzt ist (ohne Slash am Ende).
-
-### Fehler: `bot_secret not configured`
-
-Die `botSecret` muss das Shared Secret von `occ talk:bot:install` sein (min. 40 Zeichen).
-
-### Fehler: `aiohttp not installed`
-
-```bash
-pip install aiohttp
-```
-
-### Nachricht wird nicht empfangen
-
-- Prüfe `roomPolicy` (nur `open` oder `mention`)
-- Überprüfe `allowFrom` und `allowRooms` Whitelisten
-- Siehe Log für Debugging: `logger.debug("Nextcloud Talk: ...")`
-
-### Nachricht wird nicht gesendet
-
-- Prüfe `base_url` und URL-Endpunkt
-- Siehe Log: `logger.error("Nextcloud Talk: error sending message: {}")`
-- Nachrichten werden in 32000-Charakter-Blöcken gesendet
-
-## Nextcloud-Konfiguration
-
-### Fehlerhafte Installation
-
-```bash
-# Bot deinstallieren
-php occ talk:bot:delete --bot-name "Nanobot"
-
-# Neues Bot erstellen
-php occ talk:bot:install \
-  "Nanobot" \
-  "dein-shared-secret-mindestens-40-zeichen" \
-  "https://nanobot.example.com/webhook/nextcloud_talk" \
-  --feature webhook \
-  --feature response
-```
-
-### Bot in weitere Räume einbinden
-
-```bash
-php occ talk:bot:install-in-room "Nanobot" "<raum-token>"
-```
-
-### Bot-Features prüfen
-
-```bash
-php occ talk:bot:list
-```
-
-## Weiterführende Dokumentation
-
-- [Nextcloud Talk Bot API](https://docs.nextcloud.com/server/stable/admin_manual/configuration_user/occ_commands.html#talk-bot-install)
-- [nanobot /channels/manager.py](nanobot/channels/manager.py)
-- [nanobot/channels/nextcloud_talk.py](nanobot/channels/nextcloud_talk.py)
-- [nanobot/config/schema.py](nanobot/config/schema.py)
-
-## Änderungen an den nanobot-Quellcode
-
-| Datei | Änderung |
-|-------|----------|
-| `nanobot/config/schema.py` | `NextcloudTalkConfig` Klasse + Eintrag in `ChannelsConfig` |
-| `nanobot/channels/manager.py` | `NextcloudTalkChannel` initialisierung in `_init_channels()` |
-| `nanobot/channels/nextcloud_talk.py` | **Neu** (388 Zeilen) |
-
-## Lizenz
-
-Teil von [nanobot](https://github.com/volkergrabbe/nanobot) OpenSource-Projekt.

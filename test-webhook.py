@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Webhook-Test-Skript für Nextcloud Talk Channel.
+"""Webhook Test Script for Nextcloud Talk Channel.
 
-Dieses Skript testet den Webhook-Endpunkt mit einer Test-Nachricht.
-Benötigt: python3, openssl
+This script tests the webhook endpoint with a test message.
+Requires: python3, openssl
 """
 
 import asyncio
@@ -16,31 +16,31 @@ from pathlib import Path
 try:
     import httpx
 except ImportError:
-    print("Fehler: httpx nicht installiert")
-    print("Installiere mit: pip install httpx")
+    print("Error: httpx not installed")
+    print("Install with: pip install httpx")
     exit(1)
 
 try:
     from aiohttp import web
 except ImportError:
-    print("Fehler: aiohttp nicht installiert")
-    print("Installiere mit: pip install aiohttp")
+    print("Error: aiohttp not installed")
+    print("Install with: pip install aiohttp")
     exit(1)
 
 
 async def test_webhook(port: int = 18790) -> None:
-    """Führe einen Webhook-Test durch."""
-    print(f"🧪 Starte Webhook-Test-Skript")
+    """Run a webhook test."""
+    print(f"🧪 Starting Webhook Test Script")
     print(f"📡 Gateway Port: {port}")
 
-    # Test-Config ausgeben
-    print("\n📋 Test-Details:")
+    # Print test config
+    print("\n📋 Test Details:")
     print(f"   BASE_URL: https://cloud.example.com")
-    print(f"   BOT_SECRET: dein-shared-secret-mindestens-40-zeichen")
+    print(f"   BOT_SECRET: your-shared-secret-min-40-chars")
     print(f"   WEBHOOK_PATH: /webhook/nextcloud_talk")
     print(f"   ROOM_TOKEN: testtoken123")
 
-    # Payload erstellen
+    # Create test payload
     test_payload = {
         "type": "Create",
         "actor": {"type": "users", "id": "testuser1", "displayName": "Test User 1"},
@@ -48,28 +48,25 @@ async def test_webhook(port: int = 18790) -> None:
             "type": "comment",
             "id": "1",
             "name": "Test User 1",
-            "content": "Hallo Bot! Was kannst du?",
+            "content": "Hello Bot! What can you do?",
             "mediaType": "text/markdown",
         },
         "target": {"type": "room", "id": "testtoken123", "name": "Test Room"},
     }
 
-    print("\n📤 Test-Payload:")
+    print("\n📤 Test Payload:")
     print(json.dumps(test_payload, indent=2))
 
-    # Signatur berechnen
-    print("\n🔐 HMAC-Signatur-Berechnung:")
+    # Calculate signature
+    print("\n🔐 HMAC Signature Calculation:")
 
-    # WICHTIG: Bot-Secret muss aus config.json stammen
-    print("   Hinweis: Der Test nutzt ein Platzhalter-Bot-Secret.")
-    print(
-        "   Stelle sicher, dass du den echten Bot-Secret aus deiner config.json verwendest."
-    )
+    # IMPORTANT: bot_secret must come from config.json
+    print("   Note: Test uses placeholder bot secret.")
+    print("   Make sure to use your actual bot_secret from config.json")
 
-    # Bot-Secret aus config.json lesen (falls vorhanden)
+    # Read bot_secret from config.json (if available)
     config_path = Path.home() / ".nanobot" / "config.json"
     if config_path.exists():
-        import configparser
         import json
 
         config_data = json.loads(config_path.read_text())
@@ -80,11 +77,11 @@ async def test_webhook(port: int = 18790) -> None:
         )
         if bot_secret:
             print(
-                f"   ✅ Bot-Secret aus config.json gefunden ({len(bot_secret)} Zeichen)"
+                f"   ✅ Bot-Secret found in config.json ({len(bot_secret)} characters)"
             )
 
-    # Test mit Platzhalter
-    bot_secret = "test-shared-secret-mindestens-40-zeichen"
+    # Test with placeholder
+    bot_secret = "test-shared-secret-min-40-zeichen"
     random_value = os.urandom(32).hex()
     body = json.dumps(test_payload)
     signature = hmac.new(
@@ -96,8 +93,8 @@ async def test_webhook(port: int = 18790) -> None:
     print(f"   RANDOM_VALUE: {random_value}")
     print(f"   SIGNATURE: {signature}")
 
-    # Test-Anfrage senden
-    print("\n🌐 Sende Test-Anfrage an:")
+    # Send test request
+    print("\n🌐 Sending Test Request to:")
     url = f"http://localhost:{port}/webhook/nextcloud_talk"
 
     print(f"   URL: {url}")
@@ -117,36 +114,34 @@ async def test_webhook(port: int = 18790) -> None:
                     "Content-Type": "application/json",
                 },
             )
-            print(f"\n✅ Antwort empfangen:")
+            print(f"\n✅ Response received:")
             print(f"   Status: {response.status_code}")
             print(f"   Body: {response.text[:200]}...")
 
             if response.status_code == 200:
-                print("\n🎉 Webhook-Test erfolgreich!")
+                print("\n🎉 Webhook test successful!")
             else:
-                print(
-                    f"\n❌ Webhook-Test fehlgeschlagen! Status: {response.status_code}"
-                )
+                print(f"\n❌ Webhook test failed! Status: {response.status_code}")
 
     except httpx.ConnectError:
-        print("\n❌ Verbindung fehlgeschlagen!")
-        print(f"   Stellen sicher, dass der nanobot Gateway auf Port {port} läuft:")
+        print("\n❌ Connection failed!")
+        print(f"   Make sure the nanobot gateway is running on port {port}:")
         print(f"   > nanobot gateway")
     except Exception as e:
-        print(f"\n❌ Fehler bei der Anfrage: {e}")
+        print(f"\n❌ Error during request: {e}")
 
 
 async def start_webhook_test_server() -> None:
-    """Startet einen lokalen Webhook-Server für Tests."""
-    print(f"🚀 Starte lokalen Webhook-Test-Server")
+    """Starts a local webhook server for testing."""
+    print(f"🚀 Starting local Webhook Test Server")
 
     app = web.Application()
 
     async def handle_webhook(request):
-        """Behandle den Webhook."""
+        """Handle the webhook."""
         from aiohttp import web
 
-        print(f"\n📨 Webhook empfangen!")
+        print(f"\n📨 Webhook received!")
 
         try:
             body_bytes = await request.read()
@@ -159,8 +154,8 @@ async def start_webhook_test_server() -> None:
             print(f"   SIGNATURE_HEADER: {sig_header}")
             print(f"   BODY: {body_str[:200]}...")
 
-            # Test-Bot-Secret
-            bot_secret = "test-shared-secret-mindestens-40-zeichen"
+            # Test bot secret
+            bot_secret = "test-shared-secret-min-40-zeichen"
 
             expected = hmac.new(
                 bot_secret.encode(),
@@ -169,21 +164,21 @@ async def start_webhook_test_server() -> None:
             ).hexdigest()
 
             if not hmac.compare_digest(sig_header.lower(), expected.lower()):
-                print(f"   ❌ Ungültige Signatur!")
+                print(f"   ❌ Invalid signature!")
                 return web.Response(status=401, text="Unauthorized")
 
-            print(f"   ✅ Signatur valid!")
+            print(f"   ✅ Signature validated!")
 
             data = json.loads(body_str)
             print(f"   Event-Type: {data.get('type')}")
 
             response = {"status": 200, "text": "OK", "received_payload": data}
 
-            print(f"   📦 Antwort: {json.dumps(response)[:200]}...")
+            print(f"   📦 Response: {json.dumps(response)[:200]}...")
             return web.json_response(response)
 
         except Exception as e:
-            print(f"   ❌ Fehler: {e}")
+            print(f"   ❌ Error: {e}")
             return web.Response(status=500, text=str(e))
 
     app.router.add_post("/webhook/nextcloud_talk", handle_webhook)
@@ -193,43 +188,43 @@ async def start_webhook_test_server() -> None:
     site = web.TCPSite(runner, "0.0.0.0", 18791)
     await site.start()
 
-    print(f"✅ Test-Server gestartet auf http://localhost:18791/webhook/nextcloud_talk")
-    print("⚠️  Drücke STRG+C zum Beenden")
+    print(f"✅ Test server started at http://localhost:18791/webhook/nextcloud_talk")
+    print("⚠️  Press CTRL+C to exit")
 
     try:
         while True:
             await asyncio.sleep(1)
     except asyncio.CancelledError:
-        print("\n🛑 Server wird beendet...")
+        print("\n🛑 Server is shutting down...")
         await runner.cleanup()
 
 
 async def main() -> None:
-    """Hauptfunktion."""
+    """Main function."""
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Webhook-Test-Skript für Nextcloud Talk Channel"
+        description="Webhook Test Script for Nextcloud Talk Channel"
     )
     parser.add_argument(
         "--port",
         type=int,
         default=18791,
-        help="Port für den Webhook-Server (Standard: 18791)",
+        help="Port for webhook server (default: 18791)",
     )
     parser.add_argument(
         "--test-external",
         action="store_true",
-        help="Webhook auf Port 18790 testen (Gateway-Server)",
+        help="Test webhook on port 18790 (Gateway server)",
     )
 
     args = parser.parse_args()
 
     if args.test_external:
-        # Test externen Gateway-Server
+        # Test external gateway server
         await test_webhook(port=18790)
     else:
-        # Lokalen Test-Server starten
+        # Start local test server
         await start_webhook_test_server()
 
 

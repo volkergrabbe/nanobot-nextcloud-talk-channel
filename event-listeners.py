@@ -1,7 +1,6 @@
-"""Event-Listener für Nextcloud Talk Channel.
+"""Event Listener for Nextcloud Talk Channel.
 
-Dieses Beispiel zeigt, wie du einen eigenen Listener implementieren kannst,
-der auf Nachrichten aus Nextcloud Talk reagiert.
+This example shows how to implement a custom listener that responds to messages from Nextcloud Talk.
 """
 
 import asyncio
@@ -11,12 +10,12 @@ from nanobot.bus.dispatcher import Dispatcher
 
 
 class NextcloudTalkListener:
-    """Beispiel-Listener für Nextcloud Talk Nachrichten.
+    """Example listener for Nextcloud Talk messages.
 
-    Dieser Listener verarbeitet:
-    - Hilfekommandos (@Bot hilfe)
-    - Statusanfragen (@Bot status)
-    - Systemfragen (@Bot was kannst du)
+    This listener processes:
+    - Help commands (@Bot help)
+    - Status requests (@Bot status)
+    - System questions (@Bot what can you do)
     """
 
     def __init__(self, dispatcher: Dispatcher) -> None:
@@ -37,7 +36,7 @@ class NextcloudTalkListener:
         }
 
     async def on_message(self, event: Event) -> None:
-        """Verarbeite neue Nachricht von Nextcloud Talk."""
+        """Process new message from Nextcloud Talk."""
         try:
             content = event.content or ""
             sender_id = event.sender_id or ""
@@ -51,10 +50,10 @@ class NextcloudTalkListener:
             )
 
             if not sender_id:
-                logger.warning("Ungültige Nachricht: sender_id fehlt")
+                logger.warning("Invalid message: sender_id missing")
                 return
 
-            # Raum-Whitelist prüfen
+            # Check room whitelist
             if chat_id not in self.allowed_rooms:
                 logger.debug(
                     "Room {} not in allowed list. Allowed rooms: {}",
@@ -63,46 +62,46 @@ class NextcloudTalkListener:
                 )
                 return
 
-            # Nachricht verarbeiten
+            # Process message
             await self._process_message(content, sender_id, chat_id)
 
         except Exception as e:
-            logger.exception("Fehler beim Verarbeiten der Nachricht: {}", e)
+            logger.exception("Error processing message: {}", e)
 
     async def _process_message(
         self, content: str, sender_id: str, chat_id: str
     ) -> None:
-        """Verarbeite Nachricht basierend auf Inhalt."""
+        """Process message based on content."""
         content_lower = content.lower().strip()
 
-        # Überprüfen, ob es ein bekanntes Kommando ist
+        # Check if it's a known command
         for command, handler in self.commands.items():
             if command in content_lower:
                 await handler(content, sender_id, chat_id)
                 return
 
-        # Falls kein bekanntes Kommando, Hilfemeldung schicken
+        # If no known command, send help message
         if not content.lower().startswith("@"):
             await self._send_help(content, sender_id, chat_id)
 
     async def _send_help(self, content: str, sender_id: str, chat_id: str) -> None:
-        """Sende Hilfemeldung."""
+        """Send help message."""
         response = {
             "type": "text",
             "content": """
-**Hallo! Ich bin dein Nanobot! 🤖**
+**Hello! I am your Nanobot! 🤖**
 
-**Verfügbare Befehle:**
-- `@Bot hilfe` oder `@Bot help` - Zeigt diese Liste
-- `@Bot status` - Zeigt Systemstatus
-- `@Bot info` - Zeigt Agent-Informationen
-- `@Bot capabilities` - Zeigt was du kannst
+**Available Commands:**
+- `@Bot hilfe` or `@Bot help` - Show this list
+- `@Bot status` - Show system status
+- `@Bot info` - Show agent information
+- `@Bot capabilities` - Show what I can do
 
-**Beispiele:**
-- `@Bot status` - Systemstatus abrufen
-- `@Bot was kannst du` - Meine Fähigkeiten sehen
+**Examples:**
+- `@Bot status` - Get system status
+- `@Bot was kannst du` - See my capabilities
 
-Wenn du Git-Befehle ausführen oder Dateien bearbeiten willst, schreib einfach den Befehl direkt. Ich richte mich nach deinem Ziel.
+If you want to execute git commands or edit files, just write the command directly. I'll follow your goal.
             """.strip(),
             "channel": "nextcloud_talk",
             "chat_id": chat_id,
@@ -112,7 +111,7 @@ Wenn du Git-Befehle ausführen oder Dateien bearbeiten willst, schreib einfach d
         await self.dispatcher.dispatch(response)
 
     async def _send_status(self, content: str, sender_id: str, chat_id: str) -> None:
-        """Sende Systemstatus."""
+        """Send system status."""
         from datetime import datetime
 
         now = datetime.now().isoformat()
@@ -120,24 +119,24 @@ Wenn du Git-Befehle ausführen oder Dateien bearbeiten willst, schreib einfach d
         response = {
             "type": "text",
             "content": f"""
-**Systemstatus**
+**System Status**
 
 ---
-**Zeit:** {now}
+**Time:** {now}
 
 **Nextcloud Talk Channel:**
-- Status: ✅ **Aktiv**
-- Bot Secret: ✅ **Konfiguriert**
+- Status: ✅ **Active**
+- Bot Secret: ✅ **Configured**
 - Gateway Port: **18790**
-- Webhook-Pfad: `/webhook/nextcloud_talk`
-- Raum-Policy: **open**
+- Webhook Path: `/webhook/nextcloud_talk`
+- Room Policy: **open**
 
 **Nextcloud:**
-- Base URL: {self.dispatcher.config.channels.nextcloud_talk.base_url or "Nicht konfiguriert"}
-- Verfügbare Features: webhook, response
+- Base URL: {self.dispatcher.config.channels.nextcloud_talk.base_url or "Not configured"}
+- Available Features: webhook, response
 
 ---
-Die Antwort erfolgt von {sender_id} in Raum {chat_id}.
+The response was sent by {sender_id} in room {chat_id}.
             """.strip(),
             "channel": "nextcloud_talk",
             "chat_id": chat_id,
@@ -147,37 +146,38 @@ Die Antwort erfolgt von {sender_id} in Raum {chat_id}.
         await self.dispatcher.dispatch(response)
 
     async def _send_info(self, content: str, sender_id: str, chat_id: str) -> None:
-        """Sende Agent-Informationen."""
+        """Send agent information."""
         response = {
             "type": "text",
             "content": """
-**Agent-Informationen**
+**Agent Information**
 
 ---
 **Agent:** Nanobot (OpenCode-Agent)
 **Version:** 1.0.0
-**Model:** anthropic/claude-opus-4-5 (Standardeinstellung)
+**Model:** anthropic/claude-opus-4-5 (default)
 
-**Konfigurierte Kanäle:**
-- Nextcloud Talk: ✅ (Aktiv)
+**Configured Channels:**
+- Nextcloud Talk: ✅ (Active)
 
-**Arbeitsbereich:** ~/.nanobot/workspace
+**Workspace:** ~/.nanobot/workspace
 
 ---
-**Was kann ich:**
-- Git-Befehle ausführen (clone, status, log, etc.)
-- Dateien lesen, bearbeiten, erstellen
-- Web-Suche durchführen
-- Shell-Befehle ausführen
+**What I can:**
+- Execute git commands (clone, status, log, etc.)
+- Read, edit, create files
+- Perform web search
+- Execute shell commands
+- Find files (list_files, glob)
 
-**Bedienung:**
-Du kannst Git-Befehle direkt eingeben, z.B.:
-- `git status` - Zeigt Git-Status
-- `git log -5` - Zeigt letzten 5 Commits
-- `git diff` - Zeigt Änderungen
-- `git checkout -b feature` - Erstellt neue Branch
+**Usage:**
+You can enter git commands directly, for example:
+- `git status` - Show git status
+- `git log -5` - Show last 5 commits
+- `git diff` - Show changes
+- `git checkout -b feature` - Create new branch
 
-Du kannst auch Dateien bearbeiten oder Informationen anfordern.
+You can also edit files or request information.
             """.strip(),
             "channel": "nextcloud_talk",
             "chat_id": chat_id,
@@ -189,33 +189,33 @@ Du kannst auch Dateien bearbeiten oder Informationen anfordern.
     async def _send_capabilities(
         self, content: str, sender_id: str, chat_id: str
     ) -> None:
-        """Sende verfügbare Fähigkeiten."""
+        """Send available capabilities."""
         response = {
             "type": "text",
             "content": """
-**Meine Fähigkeiten**
+**My Capabilities**
 
 ---
-**Git-Befehle:**
+**Git Commands:**
 - `git status` - Status
 - `git log` - Logs
-- `git diff` - Änderungen
+- `git diff` - Changes
 - `git branch`, `git checkout`, `git merge`
 - `git clone`, `git pull`, `git push`
 
-**Datei-Operationen:**
-- `read_file("path")` - Datei lesen
-- `edit_file("path", content)` - Datei bearbeiten
-- `write_file("path", content)` - Datei erstellen
-- `list_directory("path")` - Verzeichnis auflisten
+**File Operations:**
+- `read_file("path")` - Read file
+- `edit_file("path", content)` - Edit file
+- `write_file("path", content)` - Create file
+- `list_directory("path")` - List directory
 
-**Andere Tools:**
-- `web_search(query)` - Web-Suche
-- `exec(command)` - Shell-Befehle ausführen
-- `list_files()`, `glob(pattern)` - Dateien finden
+**Other Tools:**
+- `web_search(query)` - Web search
+- `exec(command)` - Execute shell command
+- `list_files()`, `glob(pattern)` - Find files
 
 ---
-Einfach deinen Wunsch angeben und ich werde die entsprechenden Befehle ausführen. Schreib einfach `@Bot hilfe`, um mehr zu erfahren.
+Just state your wish and I'll execute the appropriate commands. Type `@Bot hilfe` to learn more.
             """.strip(),
             "channel": "nextcloud_talk",
             "chat_id": chat_id,
@@ -226,29 +226,29 @@ Einfach deinen Wunsch angeben und ich werde die entsprechenden Befehle ausführe
 
 
 async def main() -> None:
-    """Hauptfunktion - Beispielanwendung."""
+    """Main function - Example application."""
     from nanobot.bus.dispatcher import Dispatcher
     from nanobot.bus.queue import MessageBus
     from nanobot.config.schema import Config
     from nanobot.agent.runner import AgentRunner
 
-    print("🚀 Starte Nextcloud Talk Listener")
+    print("🚀 Starting Nextcloud Talk Listener")
 
     try:
-        # Config laden
+        # Load config
         config = Config()
 
-        # Dispatcher initialisieren
+        # Initialize dispatcher
         dispatcher = Dispatcher(config)
 
-        # MessageBus initialisieren
+        # Initialize MessageBus
         bus = MessageBus()
 
-        # Listener registrieren
+        # Register listener
         listener = NextcloudTalkListener(dispatcher)
         dispatcher.add_event_handler("message", listener.on_message)
 
-        # Nachricht Router: MessageBus → Dispatcher
+        # Message router: MessageBus → Dispatcher
         async def route_to_dispatcher():
             while True:
                 try:
@@ -259,7 +259,7 @@ async def main() -> None:
                 except asyncio.CancelledError:
                     break
 
-        # Antwort Router: Dispatcher → MessageBus
+        # Response router: Dispatcher → MessageBus
         async def route_dispatcher_to_bus():
             while True:
                 try:
@@ -270,13 +270,13 @@ async def main() -> None:
                 except asyncio.CancelledError:
                     break
 
-        # Tasks starten
-        print("📡 Nachricht Router gestartet")
+        # Start tasks
+        print("📡 Message Router started")
         task1 = asyncio.create_task(route_to_dispatcher())
         task2 = asyncio.create_task(route_dispatcher_to_bus())
 
-        # Test-Nachricht senden (Warte 2 Sekunden)
-        print("⏳ Warte 2 Sekunden, dann Test-Nachricht senden...")
+        # Send test messages (wait 2 seconds)
+        print("⏳ Waiting 2 seconds, then sending test messages...")
         await asyncio.sleep(2)
 
         from nanobot.bus.events import InboundMessage
@@ -310,18 +310,18 @@ async def main() -> None:
             await bus.publish(test_message)
             await asyncio.sleep(0.5)
 
-        print("✅ Test-Nachrichten gesendet")
-        print("⏳ Warte 3 Sekunden für Antworten...")
+        print("✅ Test messages sent")
+        print("⏳ Waiting 3 seconds for responses...")
         await asyncio.sleep(3)
 
-        print("👋 Alles erledigt! Listener wird beendet...")
+        print("👋 All done! Listener will exit...")
 
-        # Beenden
+        # Exit
         task1.cancel()
         task2.cancel()
 
     except Exception as e:
-        logger.exception("Fehler im Listener: {}", e)
+        logger.exception("Error in listener: {}", e)
         raise
 
 
