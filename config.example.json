@@ -1,0 +1,55 @@
+{
+  "channels": {
+    "nextcloud_talk": {
+      "enabled": true,
+      "baseUrl": "https://cloud.example.com",
+      "botSecret": "dein-shared-secret-mindestens-40-zeichen",
+      "webhookPath": "/webhook/nextcloud_talk",
+      "allowFrom": [
+        "volker",
+        "alice",
+        "bob",
+        "testuser1",
+        "testuser2"
+      ],
+      "allowRooms": [
+        "testtoken123",
+        "roomtoken456",
+        "productionroom789"
+      ],
+      "roomPolicy": "mention"
+    }
+  },
+  "agents": {
+    "defaults": {
+      "workspace": "~/.nanobot/workspace",
+      "model": "anthropic/claude-opus-4-5",
+      "max_tokens": 8192,
+      "temperature": 0.1
+    }
+  },
+  "providers": {
+    "anthropic": {
+      "apiKey": "sk-ant-api03-..."
+    }
+  },
+  "gateway": {
+    "host": "0.0.0.0",
+    "port": 18790
+  }
+}
+
+/*
+ * HINWEISE:
+ *
+ * 1. baseUrl ohne Slash am Ende angeben (z.B. "https://cloud.example.com")
+ * 2. botSecret muss mindestens 40 Zeichen lang sein
+ * 3. roomPolicy kann "open" oder "mention" sein:
+ *    - "open": Bot antwortet auf alle Nachrichten
+ *    - "mention": Bot antwortet nur auf @Bot-Nachrichten
+ * 4. allowFrom: Nextcloud User IDs (Namen oder IDs)
+ * 5. allowRooms: Nextcloud Konversationstoken
+ *
+ * 6. Angenommene Struktur:
+ *    channels: { nextcloud_talk: { enabled, baseUrl, botSecret, webhookPath, allowFrom, allowRooms, roomPolicy } }
+ */
