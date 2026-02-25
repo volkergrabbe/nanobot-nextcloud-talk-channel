@@ -1,0 +1,28 @@
+# Core dependencies for nanobot-nextcloud-talk-channel
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+loguru>=0.7.0
+
+# HTTP clients
+httpx>=0.25.0
+aiohttp>=3.8.0
+
+# Channel-specific dependencies
+matrix-nio>=0.20.0
+slack-sdk>=3.0.0
+slackify-markdown>=1.0.0
+
+# Optional dependencies for other channels
+# telegram: python-telegram-bot>=20.0
+# discord: discord.py>=2.0.0
+# whatsapp: pywhatsapp (custom implementation)
+# email: aiosmtplib>=2.0.0
+# qq: botpy (for QQ bot)
+# feishu: feishu-sdk
+# dingtalk: dingtalk-sdk
+
+# Development and testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+ruff>=0.1.0

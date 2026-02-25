@@ -4,6 +4,7 @@ This example shows how to implement a custom listener that responds to messages 
 """
 
 import asyncio
+from datetime import datetime
 from loguru import logger
 from nanobot.bus.events import Event
 from nanobot.bus.dispatcher import Dispatcher
@@ -110,10 +111,8 @@ If you want to execute git commands or edit files, just write the command direct
         }
         await self.dispatcher.dispatch(response)
 
-    async def _send_status(self, content: str, sender_id: str, chat_id: str) -> None:
+async def _send_status(self, content: str, sender_id: str, chat_id: str) -> None:
         """Send system status."""
-        from datetime import datetime
-
         now = datetime.now().isoformat()
 
         response = {

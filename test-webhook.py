@@ -13,19 +13,28 @@ import os
 import subprocess
 from pathlib import Path
 
+import asyncio
+import hashlib
+import hmac
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
 try:
     import httpx
 except ImportError:
     print("Error: httpx not installed")
     print("Install with: pip install httpx")
-    exit(1)
+    sys.exit(1)
 
 try:
     from aiohttp import web
 except ImportError:
     print("Error: aiohttp not installed")
     print("Install with: pip install aiohttp")
-    exit(1)
+    sys.exit(1)
 
 
 async def test_webhook(port: int = 18790) -> None:
@@ -67,8 +76,6 @@ async def test_webhook(port: int = 18790) -> None:
     # Read bot_secret from config.json (if available)
     config_path = Path.home() / ".nanobot" / "config.json"
     if config_path.exists():
-        import json
-
         config_data = json.loads(config_path.read_text())
         bot_secret = (
             config_data.get("channels", {})
