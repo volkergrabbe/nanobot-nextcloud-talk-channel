@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  nanobot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nanobot
+    hostname: nanobot
+
+    # Environment variables
+    environment:
+      - LOG_LEVEL=INFO
+      - PYTHONUNBUFFERED=1
+      - AUTO_UPDATE_HOUR=00
+      - AUTO_UPDATE_MINUTE=15
+      - NEXTCLOUD_BASE_URL=https://cloud.example.com
+      - NEXTCLOUD_BOT_SECRET=${NEXTCLOUD_BOT_SECRET:-}
+      - LLM_PROVIDER=${LLM_PROVIDER:-anthropic}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OLLAMA_API_BASE=${OLLAMA_API_BASE:-http://host.docker.internal:11434}
+      - VLLM_API_BASE=${VLLM_API_BASE:-http://host.docker.internal:8000/v1}
+
+    # Port mapping
+    ports:
+      - "18790:18790"
+
+    # Volume mapping for config and workspace
+    volumes:
+      # Config directory: sync between host and container
+      - /opt/nanobot/config/config.json:/home/nanobot/config/config.json:rw
+      # Read-only docker config (for container internal use)
+      - /opt/nanobot/config/config.docker.json:/home/nanobot/config/config.docker.json:ro
+      # Read-only backup config (original config)
+      - /opt/nanobot/config/config.backup.json:/home/nanobot/config/config.backup.json:ro
+
+      # Workspace (persistent data)
+      - /opt/nanobot/workspace:/home/nanobot/workspace:rw
+
+      # Logs
+      - /opt/nanobot/logs:/home/nanobot/logs:rw
+
+      # SSH keys for git operations
+      - /opt/nanobot/.ssh:/home/nanobot/.ssh:rw
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    # Network settings
+    networks:
+      - nanobot-network
+
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+
+    # Privileged mode (only if needed for hardware access)
+    privileged: false
+
+    # Capabilities
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+
+    # Restart policies
+    restart: unless-stopped
+    stop_grace_period: 10s
+
+networks:
+  nanobot-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
