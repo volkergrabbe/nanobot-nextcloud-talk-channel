@@ -28,6 +28,8 @@ class BaseChannel(ABC):
             bus: The message bus for communication.
         """
         self.config = config
+        self.workspace = config.workspace_path
+        self.bus = bus
         self.bus = bus
         self._running = False
 

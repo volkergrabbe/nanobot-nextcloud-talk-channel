@@ -28,21 +28,25 @@ services:
 
     # Volume mapping for config and workspace
     volumes:
-      # Config directory: sync between host and container
+      # Config directory: bidirektionale Synchronisation
       - /opt/nanobot/config/config.json:/home/nanobot/config/config.json:rw
-      # Read-only docker config (for container internal use)
+      # Docker Config (Container intern - READ ONLY - für Update-Mechanismus)
       - /opt/nanobot/config/config.docker.json:/home/nanobot/config/config.docker.json:ro
-      # Read-only backup config (original config)
+      # Sichere Backup-Config (Original - READ ONLY)
       - /opt/nanobot/config/config.backup.json:/home/nanobot/config/config.backup.json:ro
 
-      # Workspace (persistent data)
+      # Workspace (persistent data - mit allen Nano-Dateien)
       - /opt/nanobot/workspace:/home/nanobot/workspace:rw
 
-      # Logs
+      # Logs (auch persistent)
       - /opt/nanobot/logs:/home/nanobot/logs:rw
 
       # SSH keys for git operations
       - /opt/nanobot/.ssh:/home/nanobot/.ssh:rw
+
+      # Hidden files (.nanobot/ und .cache/) auch persistent machen
+      - /opt/nanobot/.cache:/home/nanobot/.cache:rw
+      - /opt/nanobot/.nanobot:/home/nanobot/.nanobot:rw
 
     # Resource limits
     deploy:
